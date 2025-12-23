@@ -1,7 +1,10 @@
 # Multi-stage build
-FROM golang:1.21-alpine AS builder
+FROM golang:1.23-alpine AS builder
 
-WORKDIR /app
+WORKDIR /build
+
+# Install git for go mod download
+RUN apk add --no-cache git
 
 # Copy go mod files
 COPY go.mod go.sum ./
@@ -13,28 +16,37 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
+# CGO_ENABLED=0 for static binary that works in alpine
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
     -o rarclean ./cmd/rarclean
 
 # Final stage
 FROM alpine:latest
 
-RUN apk --no-cache add ca-certificates
+# Install 7z for RAR extraction
+RUN apk add --no-cache p7zip
 
-WORKDIR /root/
+WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /app/rarclean .
+COPY --from=builder /build/rarclean .
 
 # Copy example config
-COPY config.example.json ./config.json
+COPY config.example.json ./config.example.json
 
 # Create necessary directories
 RUN mkdir -p /data /logs
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD ["/root/rarclean", "-health"]
+# Set permissions
+RUN chmod +x rarclean
+
+# Use non-root user
+RUN addgroup -D -g 1000 rarclean && \
+    adduser -D -u 1000 -G rarclean rarclean && \
+    chown -R rarclean:rarclean /app
+
+USER rarclean
 
 ENTRYPOINT ["./rarclean"]
-CMD ["-config", "/root/config.json"]
+
