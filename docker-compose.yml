@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  rarclean:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rarclean
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=info
+    volumes:
+      - ./config.json:/root/config.json:ro
+      - ./data:/data
+      - ./logs:/logs
+    networks:
+      - nas-network
+
+networks:
+  nas-network:
+    driver: bridge

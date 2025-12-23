@@ -1,0 +1,27 @@
+{
+  "qbittorrent": {
+    "host": "localhost",
+    "port": 8080,
+    "username": "admin",
+    "password": "adminPassword"
+  },
+  "paths": {
+    "download_dir": "/mnt/downloads",
+    "extract_dir": "/mnt/extracted",
+    "organize_dir": "/mnt/organized"
+  },
+  "extraction": {
+    "enabled": true,
+    "cleanup_after": true,
+    "pause_torrent": true
+  },
+  "organization": {
+    "enabled": true,
+    "pattern": "{{category}}/{{name}}"
+  },
+  "service": {
+    "interval_seconds": 300,
+    "log_level": "info",
+    "log_file": "/logs/rarclean.log"
+  }
+}
