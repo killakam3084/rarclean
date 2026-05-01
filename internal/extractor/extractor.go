@@ -77,15 +77,16 @@ func (e *Extractor) FindRARFiles() ([]RARFile, error) {
 
 // Extract extracts a RAR file to its directory
 func (e *Extractor) Extract(rar RARFile) error {
-	// Verify 7z is available
-	if _, err := exec.LookPath("7z"); err != nil {
-		return fmt.Errorf("7z command not found: %w", err)
+	// Verify unrar is available
+	if _, err := exec.LookPath("unrar"); err != nil {
+		return fmt.Errorf("unrar command not found: %w", err)
 	}
 
-	// Run extraction with 7z
+	// Run extraction with unrar
+	// x: extract with full paths
 	// -y: assume yes to all prompts
-	// -o: output directory (same as RAR location)
-	cmd := exec.Command("7z", "x", "-y", fmt.Sprintf("-o%s", rar.Directory), rar.Path)
+	// -op<dir>: output directory (same as RAR location)
+	cmd := exec.Command("unrar", "x", "-y", fmt.Sprintf("-op%s", rar.Directory), rar.Path)
 
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to extract %s: %w\n%s", rar.Path, err, strings.TrimSpace(string(out)))
