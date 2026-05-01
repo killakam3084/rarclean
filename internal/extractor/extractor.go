@@ -87,8 +87,8 @@ func (e *Extractor) Extract(rar RARFile) error {
 	// -o: output directory (same as RAR location)
 	cmd := exec.Command("7z", "x", "-y", fmt.Sprintf("-o%s", rar.Directory), rar.Path)
 
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to extract %s: %w", rar.Path, err)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to extract %s: %w\n%s", rar.Path, err, strings.TrimSpace(string(out)))
 	}
 
 	return nil
