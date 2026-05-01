@@ -42,7 +42,7 @@ RUN mkdir -p /data /logs
 RUN chmod +x rarclean
 
 # Use non-root user
-RUN addgroup -D -g 1000 rarclean && \
+RUN addgroup -g 1000 rarclean && \
     adduser -D -u 1000 -G rarclean rarclean && \
     chown -R rarclean:rarclean /app
 
