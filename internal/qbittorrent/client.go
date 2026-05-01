@@ -60,7 +60,7 @@ func (c *Client) Login() error {
 	if err != nil {
 		return fmt.Errorf("login request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -86,7 +86,7 @@ func (c *Client) GetTorrents() ([]Torrent, error) {
 		}
 		return nil, fmt.Errorf("failed to get torrents: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -142,7 +142,7 @@ func (c *Client) SetLocation(hash, location string) error {
 	if err != nil {
 		return fmt.Errorf("set location request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
@@ -160,7 +160,7 @@ func (c *Client) GetTorrent(hash string) (*Torrent, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get torrent: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("get torrent failed with status %d", resp.StatusCode)

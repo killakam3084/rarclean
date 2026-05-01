@@ -35,7 +35,9 @@ func init() {
 	rootCmd.Flags().StringVar(&configPath, "config", "config.json", "Path to configuration file")
 	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show planned actions without executing")
 	rootCmd.Flags().StringVar(&targetPath, "path", "", "Directory containing RAR files to process (required)")
-	rootCmd.MarkFlagRequired("path")
+	if err := rootCmd.MarkFlagRequired("path"); err != nil {
+		panic(err)
+	}
 }
 
 func Execute() error {

@@ -117,9 +117,7 @@ func getRARBaseName(path string) string {
 	base = strings.ToLower(base)
 
 	// Remove .rar extension
-	if strings.HasSuffix(base, ".rar") {
-		base = base[:len(base)-4]
-	}
+	base = strings.TrimSuffix(base, ".rar")
 
 	// Remove .partXXX suffix
 	if idx := strings.LastIndex(base, ".part"); idx != -1 {
