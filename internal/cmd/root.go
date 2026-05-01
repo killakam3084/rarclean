@@ -90,8 +90,28 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 	for i, rarFile := range rarFiles {
 		fmt.Printf("Processing RAR archive %d of %d: %s\n", i+1, len(rarFiles), rarFile.BaseName)
 
-		// Step 2: Extract
-		fmt.Printf("  Step 2: Extracting with 7z...\n")
+		// Step 2: Find torrent and check download state before attempting extraction
+		fmt.Printf("  Step 2: Finding torrent in qBittorrent...\n")
+		torrent, err := qbClient.FindTorrentByPath(rarFile.Directory)
+		if err != nil {
+			fmt.Printf("    ERROR: Failed to query torrents: %v\n", err)
+			fmt.Println()
+			continue
+		}
+		if torrent != nil {
+			fmt.Printf("    Found torrent: %s (state: %s)\n", torrent.Name, torrent.State)
+			if isTorrentDownloading(torrent.State) {
+				fmt.Printf("    SKIP: Torrent is still downloading\n")
+				fmt.Println()
+				continue
+			}
+		} else {
+			fmt.Printf("    No torrent found for path: %s\n", rarFile.Directory)
+		}
+		fmt.Println()
+
+		// Step 3: Extract
+		fmt.Printf("  Step 3: Extracting with 7z...\n")
 		if already, mediaFile := extractor.IsAlreadyExtracted(rarFile); already {
 			fmt.Printf("    SKIP: Already extracted (%s found)\n", mediaFile)
 		} else if dryRun {
@@ -99,25 +119,19 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 		} else {
 			if err := ext.Extract(rarFile); err != nil {
 				fmt.Printf("    ERROR: Extraction failed: %v\n", err)
+				fmt.Println()
 				continue
 			}
 		}
 		fmt.Println()
 
-		// Step 3: Find torrent
-		fmt.Printf("  Step 3: Finding torrent in qBittorrent...\n")
-		torrent, err := qbClient.FindTorrentByPath(rarFile.Directory)
-		if err != nil {
-			fmt.Printf("    ERROR: Failed to query torrents: %v\n", err)
-			continue
-		}
+		// Steps 4-5 require a torrent to be found
 		if torrent == nil {
 			fmt.Printf("    WARNING: No torrent found for path: %s\n", rarFile.Directory)
 			fmt.Println("    (RAR files will remain in place)")
 			fmt.Println()
 			continue
 		}
-		fmt.Printf("    Found torrent: %s\n", torrent.Name)
 		fmt.Printf("    Current location: %s\n", torrent.SavePath)
 		fmt.Println()
 
@@ -164,4 +178,14 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+// isTorrentDownloading returns true if the qBittorrent state indicates the
+// torrent has not yet finished downloading.
+func isTorrentDownloading(state string) bool {
+	switch state {
+	case "downloading", "stalledDL", "checkingDL", "pausedDL", "queuedDL", "metaDL", "forcedDL":
+		return true
+	}
+	return false
 }
