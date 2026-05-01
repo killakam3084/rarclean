@@ -24,8 +24,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # Final stage
 FROM alpine:latest
 
-# Install 7z for RAR extraction
-RUN apk add --no-cache p7zip
+# Install 7z for RAR extraction (7zip package = modern 7-Zip with RAR5 support)
+# The 7zip package provides 7zz; symlink to 7z for compatibility
+RUN apk add --no-cache 7zip && ln -sf /usr/bin/7zz /usr/bin/7z
 
 WORKDIR /app
 
