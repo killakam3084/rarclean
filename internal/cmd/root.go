@@ -49,7 +49,8 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration: %w", err)
 	}
 
-	fmt.Println("=== rarclean - RAR Extraction & qBittorrent Manager ===\n")
+	fmt.Println("=== rarclean - RAR Extraction & qBittorrent Manager ===")
+	fmt.Println()
 
 	// Step 1: Find RAR files
 	fmt.Printf("Step 1: Scanning directory for RAR files: %s\n", targetPath)
