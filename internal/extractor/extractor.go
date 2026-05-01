@@ -94,6 +94,32 @@ func (e *Extractor) Extract(rar RARFile) error {
 	return nil
 }
 
+// IsAlreadyExtracted checks if a RAR archive has already been extracted by
+// looking for media files in the same directory.
+func IsAlreadyExtracted(rar RARFile) (bool, string) {
+	mediaExts := map[string]bool{
+		".mkv": true, ".mp4": true, ".avi": true, ".mov": true,
+		".m4v": true, ".ts": true, ".m2ts": true,
+	}
+
+	entries, err := os.ReadDir(rar.Directory)
+	if err != nil {
+		return false, ""
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		ext := strings.ToLower(filepath.Ext(entry.Name()))
+		if mediaExts[ext] {
+			return true, entry.Name()
+		}
+	}
+
+	return false, ""
+}
+
 // isRARFile checks if a file has a RAR extension
 func isRARFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))

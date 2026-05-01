@@ -92,7 +92,9 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 
 		// Step 2: Extract
 		fmt.Printf("  Step 2: Extracting with 7z...\n")
-		if dryRun {
+		if already, mediaFile := extractor.IsAlreadyExtracted(rarFile); already {
+			fmt.Printf("    SKIP: Already extracted (%s found)\n", mediaFile)
+		} else if dryRun {
 			fmt.Printf("    [DRY RUN] Would extract: %s\n", rarFile.Path)
 		} else {
 			if err := ext.Extract(rarFile); err != nil {
