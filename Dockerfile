@@ -30,11 +30,15 @@ RUN echo "deb http://deb.debian.org/debian bookworm main non-free non-free-firmw
     apt-get install -y --no-install-recommends unrar curl bash && \
     rm -rf /var/lib/apt/lists/*
 
-# Infisical CLI
-RUN curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | bash \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends infisical \
-  && rm -rf /var/lib/apt/lists/*
+# Infisical CLI — download binary directly to avoid apt repo setup flakiness
+RUN curl -s https://api.github.com/repos/Infisical/infisical/releases/latest \
+    | grep '"tag_name"' \
+    | sed 's/.*"infisical-cli\/v\([^"]*\)".*/\1/' \
+    | xargs -I{} curl -Lo /tmp/infisical.tar.gz \
+      "https://github.com/Infisical/infisical/releases/download/infisical-cli%2Fv{}/infisical_{}_linux_amd64.tar.gz" \
+  && tar -xzf /tmp/infisical.tar.gz -C /usr/local/bin infisical \
+  && rm /tmp/infisical.tar.gz \
+  && chmod +x /usr/local/bin/infisical
 
 WORKDIR /app
 
