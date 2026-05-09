@@ -18,6 +18,12 @@ go.work
 # Dependency directories (remove the comment below to include it)
 vendor/
 
+# Local secrets — never commit
+.env
+config.json
+logs/
+data/
+
 # IDEs
 .idea/
 .vscode/

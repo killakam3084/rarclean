@@ -1,0 +1,18 @@
+# TrueNAS SCALE deployment compose.
+# Secrets are injected via Infisical CLI wrapper (infisical-run.sh).
+#
+# Required secrets (stored in Infisical):
+#   QBITTORRENT_PASSWORD  — qBittorrent password
+
+services:
+  rarclean:
+    container_name: rarclean
+    image: ghcr.io/killakam3084/rarclean:latest
+    pull_policy: always
+    restart: unless-stopped
+    entrypoint: ["./infisical-run.sh"]
+    env_file: /mnt/cell_block_d/apps/rarclean/.env
+    volumes:
+      - /mnt/cell_block_d/apps/rarclean/config.json:/root/config.json:ro
+      - /mnt/cell_block_d/downloads:/mnt/downloads
+      - /mnt/cell_block_d/apps/rarclean/logs:/logs

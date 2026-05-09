@@ -76,6 +76,13 @@ func Load(path string) (*Config, error) {
 	}
 
 	globalConfig = &cfg
+
+	// Overlay secrets from environment — env takes precedence over config file.
+	// Inject via: infisical run -- ./rarclean
+	if v := os.Getenv("QBITTORRENT_PASSWORD"); v != "" {
+		cfg.QBittorrent.Password = v
+	}
+
 	return &cfg, nil
 }
 
