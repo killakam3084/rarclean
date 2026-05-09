@@ -24,18 +24,17 @@ RUN CGO_ENABLED=0 go build \
 # Final stage - Debian slim for unrar (non-free) support
 FROM debian:bookworm-slim
 
-# Install unrar from Debian non-free (supports RAR3, RAR4, RAR5)
+# Install unrar from Debian non-free and tools needed for infisical setup
 RUN echo "deb http://deb.debian.org/debian bookworm main non-free non-free-firmware" > /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y --no-install-recommends unrar curl bash && \
+    apt-get install -y --no-install-recommends unrar curl ca-certificates bash && \
     rm -rf /var/lib/apt/lists/*
 
-# Infisical CLI — pin version for reproducibility
-ARG INFISICAL_VERSION=0.41.2
-RUN curl -fsSL "https://github.com/Infisical/infisical/releases/download/infisical-cli%2Fv${INFISICAL_VERSION}/infisical_${INFISICAL_VERSION}_linux_amd64.tar.gz" \
-    -o /tmp/infisical.tar.gz \
-  && tar -xzf /tmp/infisical.tar.gz -C /usr/local/bin infisical \
-  && rm /tmp/infisical.tar.gz
+# Infisical CLI via apt repo
+RUN curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | bash \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends infisical \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
