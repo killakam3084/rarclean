@@ -2,6 +2,7 @@ name: Release
 
 on:
   push:
+    branches: [ main ]
     tags:
       - 'v*'
 
@@ -41,6 +42,7 @@ jobs:
       with:
         images: ghcr.io/${{ github.repository }}
         tags: |
+          type=ref,event=branch
           type=ref,event=tag
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}
@@ -59,6 +61,7 @@ jobs:
         cache-to: type=gha,mode=max
     
     - name: Build binaries
+      if: github.ref_type == 'tag'
       run: |
         mkdir -p dist
         
@@ -69,6 +72,7 @@ jobs:
         GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -ldflags="-w -s" -o dist/rarclean-darwin-arm64 ./cmd/rarclean
     
     - name: Create Release
+      if: github.ref_type == 'tag'
       uses: softprops/action-gh-release@v3
       with:
         files: dist/*
