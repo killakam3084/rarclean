@@ -12,8 +12,9 @@ services:
     restart: unless-stopped
     network_mode: host
     entrypoint: ["./infisical-run.sh"]
+    command: ["--path", "/mnt/cell_block_d/media", "--config", "/root/config.json"]
     env_file: /mnt/cell_block_d/apps/rarclean/.env
     volumes:
       - /mnt/cell_block_d/apps/rarclean/config.json:/root/config.json:ro
-      - /mnt/cell_block_d/downloads:/mnt/downloads
+      - /mnt/cell_block_d/media:/mnt/cell_block_d/media
       - /mnt/cell_block_d/apps/rarclean/logs:/logs
