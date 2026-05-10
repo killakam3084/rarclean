@@ -144,7 +144,7 @@ func (c *Client) SetLocation(hash, location string) error {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
 		body, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("set location failed with status %d: %s", resp.StatusCode, string(body))
 	}
