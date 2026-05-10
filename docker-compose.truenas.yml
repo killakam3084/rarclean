@@ -10,6 +10,7 @@ services:
     image: ghcr.io/killakam3084/rarclean:latest
     pull_policy: always
     restart: unless-stopped
+    network_mode: host
     entrypoint: ["./infisical-run.sh"]
     env_file: /mnt/cell_block_d/apps/rarclean/.env
     volumes:
