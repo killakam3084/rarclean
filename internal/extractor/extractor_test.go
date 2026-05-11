@@ -236,7 +236,9 @@ func touch(t *testing.T, path string) {
 	if err != nil {
 		t.Fatalf("touch %q: %v", path, err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		t.Fatalf("touch close %q: %v", path, err)
+	}
 }
 
 func must(t *testing.T, err error) {

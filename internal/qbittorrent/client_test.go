@@ -69,7 +69,7 @@ func TestGetTorrents_Success(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(torrents)
+		_ = json.NewEncoder(w).Encode(torrents)
 	}))
 	defer srv.Close()
 
@@ -93,7 +93,7 @@ func TestGetTorrents_EmptyList(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	}))
 	defer srv.Close()
 
@@ -123,7 +123,7 @@ func TestFindTorrentByPath_Found(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(torrents)
+		_ = json.NewEncoder(w).Encode(torrents)
 	}))
 	defer srv.Close()
 
@@ -151,7 +151,7 @@ func TestFindTorrentByPath_NotFound(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	}))
 	defer srv.Close()
 
@@ -215,7 +215,7 @@ func TestGetTorrent_Found(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(torrents)
+		_ = json.NewEncoder(w).Encode(torrents)
 	}))
 	defer srv.Close()
 
@@ -235,7 +235,7 @@ func TestGetTorrent_Found(t *testing.T) {
 func TestGetTorrent_NotFound(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	}))
 	defer srv.Close()
 
@@ -279,7 +279,7 @@ func TestGetTorrents_ReAuthOn403(t *testing.T) {
 		}
 		// Second call (after re-auth): success
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("[]"))
+		_, _ = w.Write([]byte("[]"))
 	}))
 	defer srv.Close()
 
