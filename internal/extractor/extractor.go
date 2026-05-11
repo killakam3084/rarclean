@@ -134,17 +134,44 @@ func isRARFile(path string) bool {
 		return true
 	}
 
+	// Check for old-style multi-part segments: .r00, .r01, .r17, .r42, etc.
+	// Extension looks like ".r" followed by one or more digits.
+	if isOldStylePartExt(ext) {
+		return true
+	}
+
 	return false
 }
 
+// isOldStylePartExt reports whether ext (already lower-cased, including the
+// leading dot) is an old-style RAR segment extension such as ".r00" or ".r17".
+func isOldStylePartExt(ext string) bool {
+	// Must be at least ".rN" — dot, 'r', one digit.
+	if len(ext) < 3 || ext[1] != 'r' {
+		return false
+	}
+	for _, c := range ext[2:] {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
 // getRARBaseName extracts the base name from a RAR file path
-// Handles: archive.rar, archive.part01.rar, archive.part001.rar
+// Handles: archive.rar, archive.part01.rar, archive.part001.rar,
+// and old-style segments archive.r00, archive.r17, etc.
 func getRARBaseName(path string) string {
 	base := filepath.Base(path)
 	base = strings.ToLower(base)
 
 	// Remove .rar extension
 	base = strings.TrimSuffix(base, ".rar")
+
+	// Remove old-style .rNN extension if present (e.g. .r00, .r17, .r42).
+	if ext := filepath.Ext(base); isOldStylePartExt(ext) {
+		base = strings.TrimSuffix(base, ext)
+	}
 
 	// Remove .partXXX suffix
 	if idx := strings.LastIndex(base, ".part"); idx != -1 {

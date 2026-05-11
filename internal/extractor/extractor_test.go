@@ -19,6 +19,12 @@ func TestGetRARBaseName(t *testing.T) {
 		{"archive.part1.rar", "archive"},
 		{"Show.S01E01.2160p.WEB.H265-GROUP.rar", "show.s01e01.2160p.web.h265-group"},
 		{"Show.S01E01.2160p.WEB.H265-GROUP.part02.rar", "show.s01e01.2160p.web.h265-group"},
+		// Old-style multi-part segments (.rNN)
+		{"archive.r00", "archive"},
+		{"archive.r17", "archive"},
+		{"archive.r42", "archive"},
+		{"archive.r100", "archive"},
+		{"Show.S01E01.2160p.WEB.H265-GROUP.r05", "show.s01e01.2160p.web.h265-group"},
 	}
 
 	for _, tt := range tests {
@@ -37,12 +43,18 @@ func TestIsRARFile(t *testing.T) {
 		"archive.part01.rar",
 		"archive.part001.rar",
 		"/some/path/show.s01e01.rar",
+		// Old-style multi-part segments
+		"archive.r00",
+		"archive.r17",
+		"archive.r42",
+		"archive.r100",
 	}
 	no := []string{
 		"archive.mkv",
 		"archive.mp4",
 		"archive.zip",
-		"archive.r00",
+		"archive.sfv",
+		"archive.nfo",
 		"",
 	}
 
@@ -245,5 +257,64 @@ func must(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+// --- Old-style multi-part (.rNN) ---
+
+// TestDeleteRARFiles_OldStyleParts checks that .rNN segment files are deleted
+// alongside the .rar first part, while non-archive files survive.
+func TestDeleteRARFiles_OldStyleParts(t *testing.T) {
+	dir := t.TempDir()
+	rarParts := []string{
+		"show.s01e01.rar",
+		"show.s01e01.r00",
+		"show.s01e01.r01",
+		"show.s01e01.r17",
+		"show.s01e01.r42",
+	}
+	for _, p := range rarParts {
+		touch(t, filepath.Join(dir, p))
+	}
+	touch(t, filepath.Join(dir, "show.s01e01.mkv"))
+	touch(t, filepath.Join(dir, "show.s01e01.sfv"))
+	touch(t, filepath.Join(dir, "show.s01e01.nfo"))
+
+	rar := RARFile{Directory: dir}
+	if err := DeleteRARFiles(rar, false); err != nil {
+		t.Fatalf("DeleteRARFiles error: %v", err)
+	}
+
+	for _, p := range rarParts {
+		if _, err := os.Stat(filepath.Join(dir, p)); !os.IsNotExist(err) {
+			t.Errorf("expected %s to be deleted", p)
+		}
+	}
+	for _, keep := range []string{"show.s01e01.mkv", "show.s01e01.sfv", "show.s01e01.nfo"} {
+		if _, err := os.Stat(filepath.Join(dir, keep)); err != nil {
+			t.Errorf("expected %s to remain: %v", keep, err)
+		}
+	}
+}
+
+// TestFindRARFiles_OldStyleMultiPart checks that an old-style archive
+// (first.rar + .r00, .r01 …) is discovered as a single archive and
+// deduplicated correctly.
+func TestFindRARFiles_OldStyleMultiPart(t *testing.T) {
+	dir := t.TempDir()
+	subDir := filepath.Join(dir, "Show.S01E01")
+	must(t, os.MkdirAll(subDir, 0755))
+	touch(t, filepath.Join(subDir, "show.s01e01.rar"))
+	for _, seg := range []string{".r00", ".r01", ".r02", ".r17", ".r42"} {
+		touch(t, filepath.Join(subDir, "show.s01e01"+seg))
+	}
+
+	ext := New(dir)
+	files, err := ext.FindRARFiles()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(files) != 1 {
+		t.Errorf("got %d archive(s), want 1 — old-style parts not deduplicated", len(files))
 	}
 }
