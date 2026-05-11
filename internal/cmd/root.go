@@ -15,6 +15,7 @@ var (
 	configPath string
 	dryRun     bool
 	targetPath string
+	purgeStale bool
 )
 
 var rootCmd = &cobra.Command{
@@ -35,6 +36,7 @@ func init() {
 	rootCmd.Flags().StringVar(&configPath, "config", "config.json", "Path to configuration file")
 	rootCmd.Flags().BoolVar(&dryRun, "dry-run", false, "Show planned actions without executing")
 	rootCmd.Flags().StringVar(&targetPath, "path", "", "Directory containing RAR files to process (required)")
+	rootCmd.Flags().BoolVar(&purgeStale, "purge-stale", false, "Delete RAR files when torrent is gone but content is already extracted")
 	if err := rootCmd.MarkFlagRequired("path"); err != nil {
 		panic(err)
 	}
@@ -127,8 +129,20 @@ func runRarclean(cmd *cobra.Command, args []string) error {
 
 		// Steps 4-5 require a torrent to be found
 		if torrent == nil {
-			fmt.Printf("    WARNING: No torrent found for path: %s\n", rarFile.Directory)
-			fmt.Println("    (RAR files will remain in place)")
+			alreadyExtracted, _ := extractor.IsAlreadyExtracted(rarFile)
+			if purgeStale && alreadyExtracted {
+				fmt.Printf("    Purging stale RAR files (no torrent, already extracted)...\n")
+				if err := extractor.DeleteRARFiles(rarFile, dryRun); err != nil {
+					fmt.Printf("    ERROR: Failed to purge RAR files: %v\n", err)
+				}
+			} else {
+				fmt.Printf("    WARNING: No torrent found for path: %s\n", rarFile.Directory)
+				if !alreadyExtracted {
+					fmt.Println("    (Content not yet extracted — skipping)")
+				} else {
+					fmt.Println("    (RAR files will remain in place; use --purge-stale to remove them)")
+				}
+			}
 			fmt.Println()
 			continue
 		}

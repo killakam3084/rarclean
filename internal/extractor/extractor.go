@@ -154,6 +154,34 @@ func getRARBaseName(path string) string {
 	return base
 }
 
+// DeleteRARFiles removes all RAR archive files from the directory of the given
+// RARFile, leaving extracted media and other non-RAR files untouched.
+func DeleteRARFiles(rar RARFile, dryRun bool) error {
+	entries, err := os.ReadDir(rar.Directory)
+	if err != nil {
+		return fmt.Errorf("failed to read directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if !isRARFile(filepath.Join(rar.Directory, entry.Name())) {
+			continue
+		}
+		fullPath := filepath.Join(rar.Directory, entry.Name())
+		if dryRun {
+			fmt.Printf("    [DRY RUN] Would delete: %s\n", fullPath)
+			continue
+		}
+		if err := os.Remove(fullPath); err != nil {
+			return fmt.Errorf("failed to delete %s: %w", fullPath, err)
+		}
+		fmt.Printf("    Deleted: %s\n", fullPath)
+	}
+	return nil
+}
+
 // findFirstPart finds the first part of a multi-part RAR archive
 // Looks for .rar, .part01.rar, .part001.rar in order
 func findFirstPart(directory, baseName string) string {
